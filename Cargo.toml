@@ -1,0 +1,22 @@
+[package]
+name = "game2"
+version = "0.1.0"
+edition = "2021"
+build = "build.rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[build-dependencies]
+bindgen = "0.66.1"
+
+[dependencies.gl]
+git = "https://github.com/bjz/gl-rs"
+
+[dependencies.sdl2]
+git = "https://github.com/AngryLawyer/rust-sdl2"
+features = ["image"]
+
+[dependencies]
+specs = "0.17"
+specs-derive = "0.4.1"
+rodio = "0.17.1"
