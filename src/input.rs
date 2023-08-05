@@ -114,6 +114,7 @@ pub fn read_input_event(input: &mut InputState, controller_settings: &Controller
 				Keycode::L => { input.btn_right = true },
 				Keycode::E => { input.left_shoulder = true },
 				Keycode::U => { input.right_shoulder = true },
+				Keycode::Return => { input.btn_start = true },
 				_ => ()
 			}
 		},
@@ -130,6 +131,7 @@ pub fn read_input_event(input: &mut InputState, controller_settings: &Controller
 				Keycode::L => { input.btn_right = false },
 				Keycode::E => { input.left_shoulder = false },
 				Keycode::U => { input.right_shoulder = false },
+				Keycode::Return => { input.btn_start = false },
 				_ => ()
 			};
 		},
