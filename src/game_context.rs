@@ -1,5 +1,6 @@
 use sdl2::render::{WindowCanvas, Texture};
 use crate::game_context::GameContext::{Battle, StartScreen};
+use crate::screens::start::render_start_screen;
 use super::screens::battle::{BattleContext, render_battle};
 use super::screens::start::StartScreenContext;
 use super::input::{InputState, get_player_intent_vector};
@@ -28,6 +29,7 @@ impl GameObject{
         //will reach out to the draw functions of its phases
         match self.phase {
             Battle(battle)=> render_battle(canvas, background_texture, &battle.player),
+            StartScreen(ctx) => render_start_screen(canvas, background_texture, &ctx),
             _ => todo!("implement render for other game phases")
         }
     }

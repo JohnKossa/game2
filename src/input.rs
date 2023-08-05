@@ -1,3 +1,7 @@
+use sdl2::event::Event;
+use sdl2::keyboard::Keycode;
+use sdl2::controller::{Axis, Button};
+
 #[derive(Debug)]
 pub enum ControllerType{
 	Keyboard,
@@ -43,6 +47,7 @@ pub struct InputState{
 	pub btn_back: bool,
 	pub left_stick: bool,
 	pub right_stick: bool,
+	pub shutdown: bool,
 }
 impl InputState{
 	pub fn new() -> InputState{
@@ -68,6 +73,7 @@ impl InputState{
 			btn_back: false,
 			left_stick: false,
 			right_stick: false,
+			shutdown: false
 		}
 	}
 }
@@ -89,6 +95,105 @@ pub fn get_player_intent_vector(input: &InputState) -> Option<f32>{
 		(false, false, false, true)  =>  Some(1.5*pi),
 		(false, true, false, true)   =>  Some(1.75*pi),
 		_                            =>  None
+	}
+}
+
+pub fn read_input_event(input: &mut InputState, controller_settings: &ControllerSettings, event: &Event){
+	match event {
+		Event::KeyDown {keycode: Some(Keycode::Escape), .. } | Event::Quit { .. } => {input.shutdown = true;},
+		Event::KeyDown {keycode: Some(code),..} => {
+			input.device = ControllerType::Keyboard;
+			match code{
+				Keycode::W => { input.dpad_up = true },
+				Keycode::A => { input.dpad_left = true },
+				Keycode::D => { input.dpad_right = true },
+				Keycode::S => { input.dpad_down = true },
+				Keycode::I => { input.btn_up = true },
+				Keycode::J => { input.btn_left = true },
+				Keycode::K => { input.btn_down = true },
+				Keycode::L => { input.btn_right = true },
+				Keycode::E => { input.left_shoulder = true },
+				Keycode::U => { input.right_shoulder = true },
+				_ => ()
+			}
+		},
+		Event::KeyUp {keycode: Some(code),..} => {
+			input.device = ControllerType::Keyboard;
+			match code{
+				Keycode::W => { input.dpad_up = false },
+				Keycode::A => { input.dpad_left = false },
+				Keycode::D => { input.dpad_right = false },
+				Keycode::S => { input.dpad_down = false },
+				Keycode::I => { input.btn_up = false },
+				Keycode::J => { input.btn_left = false },
+				Keycode::K => { input.btn_down = false },
+				Keycode::L => { input.btn_right = false },
+				Keycode::E => { input.left_shoulder = false },
+				Keycode::U => { input.right_shoulder = false },
+				_ => ()
+			};
+		},
+		Event::ControllerAxisMotion { axis, value: val, .. } => {
+			input.device = ControllerType::Gamepad;
+			let dead_zone = controller_settings.dead_zone;
+			match (axis, val) {
+				(Axis::LeftX, val) if val < &dead_zone && val > &-dead_zone => { input.left_x_pos = 0;},
+				(Axis::LeftX, val) => {input.left_x_pos = *val;},
+				(Axis::LeftY, val) if val < &dead_zone && val > &-dead_zone => { input.left_y_pos = 0;},
+				(Axis::LeftY, val) => {input.left_y_pos = *val;},
+				(Axis::RightX, val) if val < &dead_zone && val > &-dead_zone => { input.right_x_pos = 0;},
+				(Axis::RightX, val) => {input.right_x_pos = *val;},
+				(Axis::RightY, val) if val < &dead_zone && val > &-dead_zone => { input.right_y_pos = 0;},
+				(Axis::RightY, val) => {input.right_y_pos = *val;},
+				(Axis::TriggerLeft, val) if val < &dead_zone && val > &-dead_zone => { input.trig_left_pos = 0;},
+				(Axis::TriggerLeft, val) => {input.trig_left_pos = *val;},
+				(Axis::TriggerRight, val) if val < &dead_zone && val > &-dead_zone => { input.trig_right_pos = 0;},
+				(Axis::TriggerRight, val) => {input.trig_right_pos = *val;},
+			}
+		}
+		Event::ControllerButtonDown { button, .. } => {
+			input.device = ControllerType::Gamepad;
+			match button {
+				Button::A =>             { input.btn_down = true },
+				Button::X =>             { input.btn_left = true },
+				Button::Y =>             { input.btn_up = true },
+				Button::B =>             { input.btn_right = true },
+				Button::LeftShoulder =>  { input.left_shoulder = true },
+				Button::RightShoulder => { input.right_shoulder = true },
+				Button::DPadDown =>      { input.dpad_down = true },
+				Button::DPadLeft =>      { input.dpad_left = true },
+				Button::DPadRight =>     { input.dpad_right = true },
+				Button::DPadUp =>        { input.dpad_up = true },
+				Button::Start =>         { input.btn_start = true },
+				Button::Back =>          { input.btn_back = true },
+				Button::LeftStick =>     { input.left_stick = true },
+				Button::RightStick =>    { input.right_stick = true },
+				_ => ()
+			}
+		},
+		Event::ControllerButtonUp { button, .. } => {
+			input.device = ControllerType::Gamepad;
+			match button{
+				Button::A =>             { input.btn_down = false },
+				Button::X =>             { input.btn_left = false },
+				Button::Y =>             { input.btn_up = false },
+				Button::B =>             { input.btn_right = false },
+				Button::LeftShoulder =>  { input.left_shoulder = false },
+				Button::RightShoulder => { input.right_shoulder = false },
+				Button::DPadDown =>      { input.dpad_down = false },
+				Button::DPadLeft =>      { input.dpad_left = false },
+				Button::DPadRight =>     { input.dpad_right = false },
+				Button::DPadUp =>        { input.dpad_up = false },
+				Button::Start =>         { input.btn_start = false },
+				Button::Back =>          { input.btn_back = false },
+				Button::LeftStick =>     { input.left_stick = false },
+				Button::RightStick =>    { input.right_stick = false },
+				_ => ()
+			}
+		},
+		Event::ControllerDeviceAdded { .. } => { println!("Controller added"); },
+		Event::ControllerDeviceRemoved { .. } => { println!("Controller removed"); },
+		_ => {}
 	}
 }
 
