@@ -2,12 +2,11 @@ use std::fs::File;
 use std::io::BufReader;
 use sdl2::pixels::Color;
 use sdl2::rect::{Point, Rect};
-use sdl2::render::{WindowCanvas, Texture};
+use sdl2::render::{WindowCanvas, Texture, BlendMode};
 use rodio::{Decoder};
-use crate::game_context::GameContext;
-use super::super::input::{InputState, get_player_intent_vector};
-use super::super::sound_manager::SoundManager;
-use super::super::game_context::GameObject;
+use crate::game_context::{GameContext, GameObject};
+use crate::input::{InputState, get_player_intent_vector};
+use crate::sound_manager::SoundManager;
 
 #[derive(Clone, Copy)]
 pub enum BattleState{
@@ -50,9 +49,18 @@ impl BattleContext{
 				match battle_context.state {
 					BattleState::Starting => (),
 					BattleState::Live => {
-						update_battle_player(battle_player, &input_state, my_sound_manager);
+						if input_state.btn_start{
+							battle_context.state = BattleState::Paused;
+						}else{
+							update_battle_player(battle_player, &input_state, my_sound_manager);
+						}
+
 					},
-					BattleState::Paused => (),
+					BattleState::Paused => {
+						if input_state.btn_start{
+							battle_context.state = BattleState::Live;
+						}
+					},
 					BattleState::Finished => (),
 				}
 			},
@@ -156,10 +164,10 @@ fn update_battle_player(player: &mut BattlePlayerContext, input: &InputState, so
 	}
 }
 
-pub fn render_battle(canvas: &mut WindowCanvas, background_texture: &Texture, player: &BattlePlayerContext){
+pub fn render_battle(canvas: &mut WindowCanvas, background_texture: &Texture, ctx: &BattleContext){
+	let player = ctx.player;
 	canvas.clear();
-	//let (width, height) = canvas.output_size().unwrap();
-	//let bg_rect = Rect::from(0,0,width, height);
+	let (width, height) = canvas.output_size().unwrap();
 	canvas.copy(background_texture, None, None).expect("Couldn't draw background texture.");
 	let player_rect = Rect::from_center(player.position, 50, 50);
 	let player_color = match player.state{
@@ -172,5 +180,16 @@ pub fn render_battle(canvas: &mut WindowCanvas, background_texture: &Texture, pl
 	};
 	canvas.set_draw_color(player_color);
 	canvas.fill_rect(player_rect).unwrap();
+
+	match ctx.state{
+		BattleState::Paused =>{
+			canvas.set_blend_mode(BlendMode::Blend);
+			canvas.set_draw_color((0,0,255,128));
+			canvas.fill_rect(Rect::new(0, 0, width, height)).expect("Failed to draw a rectangle");
+			canvas.set_blend_mode(BlendMode::None);//put the blend mode back to normal
+		},
+		_ => ()
+	};
+
 	canvas.present();
 }
