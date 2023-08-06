@@ -51,7 +51,10 @@ fn main() {
 		.expect("Failed to create canvas from window");
 
 	let texture_creator = canvas.texture_creator();
-	let background_texture = texture_creator.load_texture("assets/images/background.jpg")
+	//let background_texture = texture_creator.load_texture("assets/images/background.jpg")
+	//	.expect("Unable to create background texture.");
+
+	let background_texture = texture_creator.load_texture("assets/images/neon_noire.png")
 		.expect("Unable to create background texture.");
 
 	let mut events = sdl_context.event_pump()
