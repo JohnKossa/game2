@@ -1,5 +1,7 @@
-use sdl2::render::{WindowCanvas, Texture, BlendMode};
+use sdl2::pixels::Color;
 use sdl2::rect::{Point, Rect};
+use sdl2::render::{WindowCanvas, Texture, BlendMode};
+use sdl2::ttf::FontStyle;
 use crate::game_context::{GameContext, GameObject};
 use crate::input::{InputState};
 use crate::screens::battle::BattleContext;
@@ -54,9 +56,24 @@ impl StartScreenContext{
 }
 
 pub fn render_start_screen(canvas: &mut WindowCanvas, background_texture: &Texture, context: &StartScreenContext){
-	canvas.clear();
 	let (width, height) = canvas.output_size().unwrap();
+	canvas.clear();
+
 	canvas.copy(background_texture, None, None).expect("Couldn't draw background texture.");
+
+	let ttf_context = sdl2::ttf::init().unwrap();
+	let mut font = ttf_context.load_font("assets/fonts/The_Frontman.ttf", 128).unwrap();
+	// Render the text into a surface.
+	let surface = font.render("Press Start")
+		.blended(Color::RGBA(255, 64, 0, 127))  // Black text
+		.unwrap();
+	// Convert the surface to a texture.
+	let texture_creator = canvas.texture_creator();
+	let texture = texture_creator.create_texture_from_surface(&surface).unwrap();
+	// Draw the texture on the canvas.
+	let texture_query = texture.query();
+	let target_rect = Rect::new(50, 100, texture_query.width, texture_query.height);
+	canvas.copy(&texture, None, Some(target_rect)).unwrap();
 
 	match context.state{
 		StartScreenState::Waiting => (),
